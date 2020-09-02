@@ -4,7 +4,7 @@ pyinstaller primer2comment.py
 
 ## required subfolder / files
 ```
-p2c-async
+primer2comment
 │   README.md
 │   p2c-async.py
 │
