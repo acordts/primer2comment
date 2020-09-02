@@ -16,9 +16,11 @@ p2c-async
 │       │   primer_collection2.csv
 │       │   ...
 │   
-└───final
+└───final (generated)
     │   hits_primer_collection1.csv
     │   hits_primer_collection2.csv
+    │   ...
+    
 ```
 
 ## primer-files
