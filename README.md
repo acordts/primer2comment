@@ -3,13 +3,23 @@
 pyinstaller primer2comment.py
 
 ## required subfolder / files
-.
-+-- p2c-async.py
-+-- data
-|    +-- primer
-|    |   +-- <primer_collection>.csv
-|    |   +--...
-|    +-- test_sequence.txt
+```
+p2c-async
+│   README.md
+│   p2c-async.py
+│
+└───data
+│   │   test_sequence.txt
+│   │
+│   └───primer
+│       │   primer_collection1.csv
+│       │   primer_collection2.csv
+│       │   ...
+│   
+└───final
+    │   hits_primer_collection1.csv
+    │   hits_primer_collection2.csv
+```
 
 ## primer-files
 probe;sequence
