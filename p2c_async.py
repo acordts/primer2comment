@@ -249,6 +249,7 @@ def main():
         print(e)
 
 if __name__ == '__main__':
+    multiprocessing.freeze_support()
     print('primer 2 comment (v2.1)\n-----------------------')
     start = time.time()
     main()
