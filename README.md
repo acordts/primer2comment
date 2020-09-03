@@ -24,11 +24,15 @@ primer2comment
 ```
 
 ## primer-files
+```
 probe;sequence
 primer_name;ATGC - Sequence 
+```
 
 Note: Squence can contain wildcards as used in regular expressions
 
 ## sequence file (fasta format)
+```
 >sequence-name
 ATGC-sequence
+```
