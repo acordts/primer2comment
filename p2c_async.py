@@ -115,11 +115,9 @@ def progress_bar(result):
         return None
 
     globals()['PRIMER_AMOUNT_PROCESSED'] += 1
-    processed = globals()['PRIMER_AMOUNT_PROCESSED']
-    total = globals()['PRIMER_AMOUNT_TOTAL']
 
     runtime = time.time() - PRIMER_CALC_STARTING_TIMER
-    appr_runtime = (runtime / processed) * (total - processed)
+    appr_runtime = (runtime / PRIMER_AMOUNT_PROCESSED) * (PRIMER_AMOUNT_TOTAL - PRIMER_AMOUNT_PROCESSED)
 
     print('primer calculated {0} / {1} - est. runtime: {2:.0f}s'
         .format(
@@ -172,8 +170,7 @@ def write_matches(contig_entry, primer_list, result_file):
     lines = sum(lines, [])
 
     with open(result_file, 'w', newline = '') as csvfile:
-        fieldnames = globals()['RES_COLUMNS']
-        writer = csv.DictWriter(csvfile, delimiter = ';', fieldnames=fieldnames)
+        writer = csv.DictWriter(csvfile, delimiter = ';', fieldnames=RES_COLUMNS)
         writer.writeheader()
         writer.writerows(lines)
 
