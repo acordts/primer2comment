@@ -221,32 +221,28 @@ def prepare_hit_lines(contig, primer, hit_list):
     return lines
 
 def main():
-    try:
-        if not os.path.exists(RES_FOLDER):
-            os.makedirs(RES_FOLDER)
-        
-        seq = contig_reader(SEQUENCE_FILE)
-        
-        for i, primer_file in enumerate(PRIMER_FILES):
-            primer = primer_reader(primer_file)
-            res_file = os.path.join(
-                RES_FOLDER, 
-                RES_PREFIX + os.path.basename(primer_file)
-            )
+    if not os.path.exists(RES_FOLDER):
+        os.makedirs(RES_FOLDER)
+    
+    seq = contig_reader(SEQUENCE_FILE)
+    
+    for i, primer_file in enumerate(PRIMER_FILES):
+        primer = primer_reader(primer_file)
+        res_file = os.path.join(
+            RES_FOLDER, 
+            RES_PREFIX + os.path.basename(primer_file)
+        )
 
-            for contig in seq.get_contigs():
-                print('sequence: {0} - primer collection: {1} ({2} / {3})'.
-                    format(
-                        contig.name, 
-                        os.path.basename(primer_file), 
-                        i + 1, 
-                        len(PRIMER_FILES)
-                    )
+        for contig in seq.get_contigs():
+            print('sequence: {0} - primer collection: {1} ({2} / {3})'.
+                format(
+                    contig.name, 
+                    os.path.basename(primer_file), 
+                    i + 1, 
+                    len(PRIMER_FILES)
                 )
-                write_matches(contig, primer.get_primer(), res_file)
-                
-    except Exception as ex:
-        print(ex)
+            )
+            write_matches(contig, primer.get_primer(), res_file)
 
 if __name__ == '__main__':
     multiprocessing.freeze_support()
