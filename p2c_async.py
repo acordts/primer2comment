@@ -171,7 +171,6 @@ def write_matches(contig_entry, primer_list, result_file):
     lines = [p.get() for p in results]
     lines = sum(lines, [])
 
-    print(lines)
     with open(result_file, 'w', newline = '') as csvfile:
         fieldnames = globals()['RES_COLUMNS']
         writer = csv.DictWriter(csvfile, delimiter = ';', fieldnames=fieldnames)
@@ -222,33 +221,37 @@ def prepare_hit_lines(contig, primer, hit_list):
     return lines
 
 def main():
-    if not os.path.exists(RES_FOLDER):
-        os.makedirs(RES_FOLDER)
-    
-    seq = contig_reader(SEQUENCE_FILE)
-    
-    for i, primer_file in enumerate(PRIMER_FILES):
-        primer = primer_reader(primer_file)
-        res_file = os.path.join(
-            RES_FOLDER, 
-            RES_PREFIX + os.path.basename(primer_file)
-        )
-
-        for contig in seq.get_contigs():
-            print('sequence: {0} - primer collection: {1} ({2} / {3})'.
-                format(
-                    contig.name, 
-                    os.path.basename(primer_file), 
-                    i + 1, 
-                    len(PRIMER_FILES)
-                )
+    try:
+        if not os.path.exists(RES_FOLDER):
+            os.makedirs(RES_FOLDER)
+        
+        seq = contig_reader(SEQUENCE_FILE)
+        
+        for i, primer_file in enumerate(PRIMER_FILES):
+            primer = primer_reader(primer_file)
+            res_file = os.path.join(
+                RES_FOLDER, 
+                RES_PREFIX + os.path.basename(primer_file)
             )
-            write_matches(contig, primer.get_primer(), res_file)
+
+            for contig in seq.get_contigs():
+                print('sequence: {0} - primer collection: {1} ({2} / {3})'.
+                    format(
+                        contig.name, 
+                        os.path.basename(primer_file), 
+                        i + 1, 
+                        len(PRIMER_FILES)
+                    )
+                )
+                write_matches(contig, primer.get_primer(), res_file)
+                
+    except Exception as ex:
+        print(ex)
 
 if __name__ == '__main__':
     multiprocessing.freeze_support()
 
-    print('primer 2 comment (v2.2)\n-----------------------')
+    print('primer 2 comment (v2.3)\n-----------------------', )
 
     start = time.time()
     try:
