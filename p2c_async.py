@@ -3,7 +3,6 @@ import glob
 import multiprocessing
 import os
 import re
-import shutil
 import time
 
 SEQUENCE_FILE = './data/test_sequences.txt'
@@ -20,8 +19,6 @@ DISPLAY_PROGRESS = True
 PRIMER_AMOUNT_TOTAL = 0
 PRIMER_AMOUNT_PROCESSED = 0
 PRIMER_CALC_STARTING_TIMER = None
-
-HIT_LIST = []
 
 class contig(object):
     """contig / primer structure including option for a position parameter
@@ -159,22 +156,27 @@ def write_matches(contig_entry, primer_list, result_file):
         globals()['PRIMER_AMOUNT_PROCESSED'] = 0
         globals()['PRIMER_CALC_STARTING_TIMER'] = time.time()
 
+    results= list()
     for primer in primer_list:
-        pool.apply_async(
-            find_match, 
-            args = (contig_entry, primer), 
-            callback = progress_bar
+        results.append(
+            pool.apply_async(
+                find_match, 
+                args = (contig_entry, primer), 
+                callback = progress_bar
+            )
         )
-        
     pool.close()
     pool.join()
 
-    # write matches / hits after calculation completed
-    with open(result_file, 'a') as stream:
-        stream.write('%s\n'%(';'.join(globals()['HIT_LIST'])))
-    
-    # clear hit_list
-    globals()['HIT_LIST'] = list()
+    lines = [p.get() for p in results]
+    lines = sum(lines, [])
+
+    print(lines)
+    with open(result_file, 'w', newline = '') as csvfile:
+        fieldnames = globals()['RES_COLUMNS']
+        writer = csv.DictWriter(csvfile, delimiter = ';', fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(lines)
 
 def find_match(contig_entry, primer):
     """
@@ -190,12 +192,14 @@ def find_match(contig_entry, primer):
             hits.append((m.group(), start, end))
 
     if hits:
-        prepare_hit_lines(contig_entry, primer, hits)
+        return prepare_hit_lines(contig_entry, primer, hits)
+    return list()
 
 def prepare_hit_lines(contig, primer, hit_list):
     """ create entry for each hit
     
     """
+    lines = list()
     for hit in hit_list:
         start = hit[1]
         end = hit[2]
@@ -204,49 +208,42 @@ def prepare_hit_lines(contig, primer, hit_list):
         primer_name = primer.name
         requested = primer.sequence
         located = hit[0]
-        line = [
-            contig_name, 
-            primer_name, 
-            start, 
-            end, 
-            length, 
-            requested, 
-            located
-        ]
-        line = [str(e) for e in line]
+        line = {
+            'contig name': contig_name, 
+            'primer': primer_name, 
+            'start': start, 
+            'end': end, 
+            'length': length, 
+            'requested': requested, 
+            'located': located
+        }
 
-        globals()['HIT_LIST'].append(line)
+        lines.append(line)
+    return lines
 
 def main():
-    try:
-        if not os.path.exists(RES_FOLDER):
-            os.makedirs(RES_FOLDER)
-        
-        seq = contig_reader(SEQUENCE_FILE)
-        
-        for i, primer_file in enumerate(PRIMER_FILES):
-            primer = primer_reader(primer_file)
-            res_file = os.path.join(
-                RES_FOLDER, 
-                RES_PREFIX + os.path.basename(primer_file)
-            )
+    if not os.path.exists(RES_FOLDER):
+        os.makedirs(RES_FOLDER)
+    
+    seq = contig_reader(SEQUENCE_FILE)
+    
+    for i, primer_file in enumerate(PRIMER_FILES):
+        primer = primer_reader(primer_file)
+        res_file = os.path.join(
+            RES_FOLDER, 
+            RES_PREFIX + os.path.basename(primer_file)
+        )
 
-            with open(res_file, 'w') as stream:
-                stream.write('%s\n'%(';'.join(RES_COLUMNS)))
-
-            for contig in seq.get_contigs():
-                print('sequence: {0} - primer collection: {1} ({2} / {3})'.
-                    format(
-                        contig.name, 
-                        os.path.basename(primer_file), 
-                        i + 1, 
-                        len(PRIMER_FILES)
-                    )
+        for contig in seq.get_contigs():
+            print('sequence: {0} - primer collection: {1} ({2} / {3})'.
+                format(
+                    contig.name, 
+                    os.path.basename(primer_file), 
+                    i + 1, 
+                    len(PRIMER_FILES)
                 )
-                write_matches(contig, primer.get_primer(), res_file)
-                
-    except FileNotFoundError as e:
-        print(e)
+            )
+            write_matches(contig, primer.get_primer(), res_file)
 
 if __name__ == '__main__':
     multiprocessing.freeze_support()
