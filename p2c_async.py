@@ -4,7 +4,6 @@ import multiprocessing
 import os
 import re
 import shutil
-import sys
 import time
 
 SEQUENCE_FILE = './data/test_sequences.txt'
@@ -252,7 +251,7 @@ def main():
 if __name__ == '__main__':
     multiprocessing.freeze_support()
 
-    print('primer 2 comment (v2.2)\n-----------------------', file = sys.stderr)
+    print('primer 2 comment (v2.2)\n-----------------------')
 
     start = time.time()
     try:
@@ -262,4 +261,4 @@ if __name__ == '__main__':
         exit()
 
     end = time.time()
-    print('absolute runtime: {:.2f}s'.format(end - start), file = sys.stderr)
+    print('absolute runtime: {:.2f}s'.format(end - start))
