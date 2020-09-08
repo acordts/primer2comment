@@ -4,6 +4,7 @@ import multiprocessing
 import os
 import re
 import shutil
+import sys
 import time
 
 SEQUENCE_FILE = './data/test_sequences.txt'
@@ -21,15 +22,7 @@ PRIMER_AMOUNT_TOTAL = 0
 PRIMER_AMOUNT_PROCESSED = 0
 PRIMER_CALC_STARTING_TIMER = None
 
-def clean_up(folder):
-    """remove complete folder and create em once again
-
-    :param folder: folder to remove incl. substructures
-    :type folder: str
-
-    """
-    shutil.rmtree(folder)
-    os.makedirs(folder)
+HIT_LIST = []
 
 class contig(object):
     """contig / primer structure including option for a position parameter
@@ -132,7 +125,7 @@ def progress_bar(result):
     runtime = time.time() - PRIMER_CALC_STARTING_TIMER
     appr_runtime = (runtime / processed) * (total - processed)
 
-    print('primer calculated {0} / {1} - est. runtime: {2:.2f}s'
+    print('primer calculated {0} / {1} - est. runtime: {2:.0f}s'
         .format(
             PRIMER_AMOUNT_PROCESSED, 
             PRIMER_AMOUNT_TOTAL, 
@@ -156,11 +149,11 @@ def write_matches(contig_entry, primer_list, result_file):
     """ find primer matches in contig entry and write them in result_file
 
     """
-    cpu_count = multiprocessing.cpu_count()
+    proc_count = multiprocessing.cpu_count()
     if MAX_PARALLEL_PROC > 0:
-        cpu_count = min(cpu_count, MAX_PARALLEL_PROC)
+        proc_count = min(proc_count, MAX_PARALLEL_PROC)
 
-    pool = multiprocessing.Pool(cpu_count)
+    pool = multiprocessing.Pool(proc_count)
 
     if DISPLAY_PROGRESS:
         globals()['PRIMER_AMOUNT_TOTAL'] = len(primer_list)
@@ -170,14 +163,21 @@ def write_matches(contig_entry, primer_list, result_file):
     for primer in primer_list:
         pool.apply_async(
             find_match, 
-            args = (contig_entry, primer, result_file), 
+            args = (contig_entry, primer), 
             callback = progress_bar
         )
         
     pool.close()
     pool.join()
 
-def find_match(contig_entry, primer, result_file):
+    # write matches / hits after calculation completed
+    with open(result_file, 'a') as stream:
+        stream.write('%s\n'%(';'.join(globals()['HIT_LIST'])))
+    
+    # clear hit_list
+    globals()['HIT_LIST'] = list()
+
+def find_match(contig_entry, primer):
     """
 
     """
@@ -189,11 +189,11 @@ def find_match(contig_entry, primer, result_file):
         if m.group():
             start, end = m.span()
             hits.append((m.group(), start, end))
-    
-    if hits:
-        write_lines(contig_entry, primer, hits, result_file)
 
-def write_lines(contig, primer, hit_list, result_file):
+    if hits:
+        prepare_hit_lines(contig_entry, primer, hits)
+
+def prepare_hit_lines(contig, primer, hit_list):
     """ create entry for each hit
     
     """
@@ -215,13 +215,14 @@ def write_lines(contig, primer, hit_list, result_file):
             located
         ]
         line = [str(e) for e in line]
-        with open(result_file, 'a') as stream:
-            stream.write('%s\n'%(';'.join(line)))
 
+        globals()['HIT_LIST'].append(line)
 
 def main():
     try:
-        clean_up(RES_FOLDER)
+        if not os.path.exists(RES_FOLDER):
+            os.makedirs(RES_FOLDER)
+        
         seq = contig_reader(SEQUENCE_FILE)
         
         for i, primer_file in enumerate(PRIMER_FILES):
@@ -250,8 +251,15 @@ def main():
 
 if __name__ == '__main__':
     multiprocessing.freeze_support()
-    print('primer 2 comment (v2.1)\n-----------------------')
+
+    print('primer 2 comment (v2.2)\n-----------------------', file = sys.stderr)
+
     start = time.time()
-    main()
+    try:
+        main()
+    except Exception as e:
+        print(e)
+        exit()
+
     end = time.time()
-    print('absolute runtime: {:.2f}s'.format(end - start))
+    print('absolute runtime: {:.2f}s'.format(end - start), file = sys.stderr)
