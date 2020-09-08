@@ -1,6 +1,6 @@
 # primer2comment
 ## create executable
-pyinstaller primer2comment.py
+pyinstaller --onefiles --console primer2comment.py
 
 ## required subfolder / files
 ```
