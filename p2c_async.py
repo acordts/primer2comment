@@ -169,9 +169,12 @@ def write_matches(contig_entry, primer_list, result_file):
     lines = [p.get() for p in results]
     lines = sum(lines, [])
 
-    with open(result_file, 'w', newline = '') as csvfile:
+    with open(result_file, 'a', newline = '') as csvfile:
         writer = csv.DictWriter(csvfile, delimiter = ';', fieldnames=RES_COLUMNS)
-        writer.writeheader()
+        
+        if os.path.exists(result_file) and os.path.getsize(result_file) == 0:
+            writer.writeheader()
+
         writer.writerows(lines)
 
 def find_match(contig_entry, primer):
