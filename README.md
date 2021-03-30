@@ -29,7 +29,7 @@ probe;sequence
 primer_name;ATGC - Sequence 
 ```
 
-Note: Squence can contain wildcards as used in regular expressions
+Note: Sequence can contain regular expressions
 
 ## sequence file (fasta format)
 ```
